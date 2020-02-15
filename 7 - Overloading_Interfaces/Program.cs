@@ -10,14 +10,26 @@ namespace _7___Overloading_Interfaces
         static void Main(string[] args)
         {
             #region Operations with angles
-            Angle angle1 = new Angle(90, 0, 0);
+            Angle angle1 = new Angle(30, 45, 61);
             Angle angle2 = new Angle(45, 30, 30);
-            Angle resAngle = angle1 + angle2;
-            Console.WriteLine(resAngle);
+            Console.WriteLine($"Angle1: { angle1 }");
+            Console.WriteLine($"Angle2: { angle2 }");
+            Angle sum = angle1 + angle2;
+            Console.WriteLine($"A1 + A2 = { sum }");
+            Angle diff = angle1 - angle2;
+            Console.WriteLine($"A1 - A2 = { diff }");
+            int scaleFactor = 2;
+            Angle scaledAngle1 = angle1 * scaleFactor;
+            Console.WriteLine($"angle1 * { scaleFactor } = { scaledAngle1 }");
+            Angle angle4 = scaledAngle1 / scaleFactor;
+            Console.WriteLine($"angle1 / { scaleFactor } = { angle4 }");
+            Console.WriteLine();
+
             Angle angle3 = new Angle(45, 30, 30);
-            Console.WriteLine(angle1 == angle2);
-            Console.WriteLine(angle2 == angle3);
-            Console.WriteLine(angle2.Equals(angle3));
+            Console.WriteLine($"Angle1 == angle2 ? : { angle1 == angle2 }");
+            Console.WriteLine($"Angle2 == angle3 ? : { angle2 == angle3 }");
+            Console.WriteLine($"Angle2 equals angle3 ? : {angle2.Equals(angle3) }");
+            Console.WriteLine();
             #endregion
             #region Sorting 
             Angle[] angles = {
@@ -40,31 +52,101 @@ namespace _7___Overloading_Interfaces
             }
             #endregion
             #region Ienumerable and Ienumerator
-
+            Console.WriteLine("Angle2 consists of: ");
+            foreach (var angleComponent in angle2)
+            {
+                Console.WriteLine(angleComponent);
+            }
             #endregion
         }
     }
 
-    class Angle : IComparable<Angle>, IEnumerable<Angle>
+    class Angle : IComparable<Angle>
     {
-        public int Degrees { get; set; }
-        public int Minutes { get; set; }
-        public int Seconds { get; set; }
+        private int degrees;
+        public int Degrees
+        {
+            get
+            {
+                return degrees;
+            }
+            set
+            {
+                degrees = value % 360;
+            }
+        }
+        private int minutes;
+        public int Minutes
+        {
+            get
+            {
+                return minutes;
+            }
+            set
+            {
+                minutes = value % 60;
+                if (value > 60)
+                {
+                    degrees++;
+                }
 
+            }
+        }
+        private int seconds;
+        public int Seconds
+        {
+            get
+            {
+                return seconds;
+            }
+            set
+            {
+                seconds = value % 60;
+                if (value > 60)
+                {
+                    minutes++;
+                }
+            }
+        }
         public Angle(int degrees, int minutes, int seconds)
         {
             Degrees = degrees;
             Minutes = minutes;
             Seconds = seconds;
         }
-
         public static Angle operator +(Angle lhs, Angle rhs)
         {
-            Angle angle = new Angle(lhs.Degrees + rhs.Degrees, lhs.Minutes + rhs.Minutes, lhs.Seconds + rhs.Seconds);
+            int sumSeconds = lhs.Seconds + rhs.Seconds;
+            int sumMinutes = lhs.Minutes + rhs.Minutes;
+            int sumDegrees = lhs.Degrees + rhs.Degrees;
+
+            Angle angle = new Angle(sumDegrees, sumMinutes, sumSeconds);
 
             return angle;
         }
+        public static Angle operator -(Angle lhs, Angle rhs)
+        {
+            int deltaSeconds = lhs.Seconds - rhs.Seconds;
+            int deltaMinutes = lhs.Minutes - rhs.Minutes;
+            int deltaDegrees = lhs.Degrees - rhs.Degrees;
 
+            if (lhs.Seconds < rhs.Seconds)
+            {
+                deltaSeconds = 60 + deltaSeconds;
+                deltaMinutes--;
+            }
+            if (lhs.Minutes < rhs.Minutes)
+            {
+                deltaMinutes = 60 + deltaMinutes;
+                deltaDegrees--;
+            }
+            if (lhs.Degrees < rhs.Degrees)
+            {
+                deltaDegrees = 360 + deltaDegrees;
+            }
+
+            return new Angle(deltaDegrees, deltaMinutes, deltaSeconds);
+        }
         public static bool operator ==(Angle lhs, Angle rhs)
         {
             if (lhs.Minutes == rhs.Minutes && lhs.Degrees == rhs.Degrees && lhs.Seconds == rhs.Seconds)
@@ -75,6 +157,40 @@ namespace _7___Overloading_Interfaces
             {
                 return false;
             }
+        }
+        public static Angle operator *(Angle angle, int scaleFactor)
+        {
+            int scaledSeconds = angle.Seconds * scaleFactor;
+            int scaledMinutes = angle.Minutes * scaleFactor;
+            int scaledDegrees = angle.Degrees * scaleFactor;
+
+            return new Angle(scaledDegrees, scaledMinutes, scaledSeconds);
+        }
+        public static Angle operator /(Angle angle, int scaleFactor)
+        {
+            int scaledSeconds;
+            int scaledMinutes;
+            int scaledDegrees = angle.Degrees / scaleFactor;
+
+            if (angle.Degrees % scaleFactor != 0)
+            {
+                scaledMinutes = (angle.Minutes + 60) / scaleFactor;
+            }
+            else
+            {
+                scaledMinutes = angle.Minutes / scaleFactor;
+            }
+
+            if (angle.Minutes % scaleFactor != 0)
+            {
+                scaledSeconds = (angle.Seconds + 60) / scaleFactor;
+            }
+            else
+            {
+                scaledSeconds = angle.Seconds / scaleFactor;
+            }
+
+            return new Angle(scaledDegrees, scaledMinutes, scaledSeconds);
         }
         public override bool Equals(Object o)
         {
@@ -125,43 +241,66 @@ namespace _7___Overloading_Interfaces
         }
         public override string ToString()
         {
-            return String.Format($"Degrees: { Degrees }, Minutes: { Minutes }, Seconds: { Seconds }");
+            return $"Degrees: { Degrees }, Minutes: { Minutes }, Seconds: { Seconds }";
         }
         public int CompareTo(Angle angle)
         {
             return Degrees.CompareTo(angle.Degrees);
         }
-
-        public IEnumerator<Angle> GetEnumerator()
+        // Yield implimentation
+        public IEnumerator GetEnumerator()
         {
-            return new AngleEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            throw new NotImplementedException();
+            for (int i = 0; i < 3; i++)
+            {
+                yield return this[i];
+            }
         }
     }
 
-    class AngleEnumerator : IEnumerator<Angle>
+    class AngleEnumerator : IEnumerator<int>
     {
-        Angle IEnumerator<Angle>.Current => throw new NotImplementedException();
+        int position = -1;
+        Angle angle;
+        public AngleEnumerator(Angle angle)
+        {
+            this.angle = angle;
+        }
+
+        int IEnumerator<int>.Current
+        {
+            get
+            {
+                if (position < 0 || position >= 3)
+                {
+                    throw new InvalidOperationException();
+                }
+                return angle[position];
+            }
+        }
 
         object IEnumerator.Current => throw new NotImplementedException();
 
         void IDisposable.Dispose()
         {
-            throw new NotImplementedException();
+
         }
 
         bool IEnumerator.MoveNext()
         {
-            throw new NotImplementedException();
+            if (position < 2)
+            {
+                position++;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         void IEnumerator.Reset()
         {
-            throw new NotImplementedException();
+            position = -1;
         }
     }
     class CompareByDegrees : IComparer<Angle>
